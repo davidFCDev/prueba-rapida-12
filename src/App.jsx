@@ -1,16 +1,46 @@
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Movies } from "./components/Movies";
-import responseMovies from "./mocks/with-results.json";
+import { useMovies } from "./hooks/useMovies";
 
-function App() {
+function useSearch() {
   const [search, updateSearch] = useState("");
   const [error, setError] = useState(null);
   const isFirstInput = useRef(true);
-  const [movies, setMovies] = useState([]);
+
+  useEffect(() => {
+    if (isFirstInput.current) {
+      isFirstInput.current = search === "";
+      return;
+    }
+    if (search === "") {
+      setError("No se puede buscar una película vacía");
+      return;
+    }
+
+    if (search.length < 3) {
+      setError("La búsqueda debe tener al menos 3 caracteres");
+      return;
+    }
+
+    setError(null);
+  }, [search]);
+
+  return { search, updateSearch, error };
+}
+
+function App() {
+  const [sort, setSort] = useState(false);
+  const { search, updateSearch, error } = useSearch();
+  const { movies, getMovies, loading } = useMovies({ search, sort });
 
   const handleSubmit = (event) => {
     event.preventDefault();
     getMovies({ search });
+  };
+
+  const handleSort = () => {
+    setSort(!sort);
   };
 
   const handleChange = (event) => {
@@ -22,15 +52,20 @@ function App() {
     <div className="page">
       <header>
         <h1>Buscador de películas</h1>
-        <form>
-          <input type="text" placeholder="Avengers, matrix..." />
-          <button type="submit">Buscar</button>
+        <form className="form" onSubmit={handleSubmit}>
+          <input
+            name="query"
+            onChange={handleChange}
+            value={search}
+            placeholder="Avengers, matrix..."
+          />
+          <input type="checkbox" onChange={handleSort} checked={sort} />
+          <button>Buscar</button>
         </form>
+        {error && <p style={{ color: "red" }}>{error}</p>}
       </header>
 
-      <main>
-        <Movies movies={mappedMovies} />
-      </main>
+      <main>{loading ? <p>Loading...</p> : <Movies movies={movies} />}</main>
     </div>
   );
 }
