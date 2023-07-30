@@ -1,8 +1,22 @@
 import "./App.css";
+import { Movies } from "./components/Movies";
 import responseMovies from "./mocks/with-results.json";
 
 function App() {
-  const movies = responseMovies.Search;
+  const [search, updateSearch] = useState("");
+  const [error, setError] = useState(null);
+  const isFirstInput = useRef(true);
+  const [movies, setMovies] = useState([]);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    getMovies({ search });
+  };
+
+  const handleChange = (event) => {
+    const newSearch = event.target.value;
+    updateSearch(newSearch);
+  };
 
   return (
     <div className="page">
@@ -15,7 +29,7 @@ function App() {
       </header>
 
       <main>
-        
+        <Movies movies={mappedMovies} />
       </main>
     </div>
   );
